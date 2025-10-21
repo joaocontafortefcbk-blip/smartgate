@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SmartGate App</title>
+<meta name="description" content=" SmartGate .">
+
+<style>
+/* ---------------- THEME ---------------- */
+:root{
+  --bg-1:#071124; --bg-2:#0b2a44;
+  --card:rgba(255,255,255,0.03);
+  --glass: rgba(255,255,255,0.04);
+  --accent-1:#0b63d6; --accent-2:#1fd3ff;
+  --muted:#9fb0c4;
+  --danger:#ff6b6b;
+  --radius:18px;
+  --shadow: 0 20px 50px rgba(2,6,23,0.6);
+  --ui: 14px;
+}
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+html,body{height:100%;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;color:#e6f5ff}
+button{font-family:inherit}
+a{color:inherit;text-decoration:none}
+
+/* App frame */
+.app-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+.app{
+  width:380px; max-width:100%; height:820px; max-height:100vh;
+  border-radius:26px; overflow:hidden; position:relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  box-shadow:var(--shadow);
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+/* Topbar */
+.top {
+  display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+}
+.badge{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); color:#02202e;font-weight:800;font-size:20px}
+.brand{display:flex;flex-direction:column}
+.brand .title{font-weight:800;font-size:16px}
+.brand .sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* Progress */
+.progress-wrap{padding:12px 18px 6px 18px}
+.progress-track{height:6px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));transition:width .45s cubic-bezier(.2,.9,.3,1)}
+
+/* Viewport */
+.viewport{padding:18px;height:calc(100% - 120px);position:relative;overflow:hidden}
+
+/* Screens */
+.screens{position:relative;height:100%}
+.screen{
+  position:absolute;inset:0;padding:18px;display:flex;flex-direction:column;
+  transform:translateX(30px);opacity:0;pointer-events:none;
+  transition: transform .42s cubic-bezier(.2,.9,.3,1), opacity .34s ease;
+}
+.screen.active{transform:translateX(0);opacity:1;pointer-events:auto}
+
+/* Slide classes for direction */
+.screen.slide-left { transform:translateX(-40px); opacity:0; pointer-events:none }
+.screen.slide-right { transform:translateX(40px); opacity:0; pointer-events:none }
+.from-right { animation: enterFromRight .42s forwards }
+.from-left { animation: enterFromLeft .42s forwards }
+@keyframes enterFromRight { 0%{ transform:translateX(30px); opacity:0 } 100%{ transform:translateX(0); opacity:1 } }
+@keyframes enterFromLeft { 0%{ transform:translateX(-30px); opacity:0 } 100%{ transform:translateX(0); opacity:1 } }
+
+/* Card */
+.card{
+  flex:1;border-radius:14px;padding:18px;display:flex;flex-direction:column;
+  background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));
+  border:1px solid rgba(255,255,255,0.02);box-shadow:0 10px 30px rgba(2,6,23,0.45);
+}
+
+/* Hero */
+.hero{display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;margin-top:6px}
+.h1{font-size:20px;font-weight:800}
+.lead{font-size:14px;color:var(--muted);line-height:1.45;max-width:86%}
+
+/* Buttons */
+.btn{
+  margin-top:auto;display:block;width:100%;padding:14px;border-radius:12px;border:none;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); color:#02202e;font-weight:800;font-size:15px;
+  box-shadow:0 12px 30px rgba(11,99,214,0.14), inset 0 -6px 18px rgba(255,255,255,0.04);cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);margin-top:12px}
+.small{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* Input */
+.input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#e8fbff;margin-top:10px;font-size:15px}
+
+/* Pix area */
+.row{display:flex;gap:12px;align-items:center}
+.copyarea{flex:1;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);font-family:monospace;color:#dffeff;text-align:center}
+
+/* proof area */
+.preview{margin-top:12px;border-radius:10px;overflow:hidden;max-height:220px}
+.preview img{width:100%;height:auto;display:block}
+
+/* Errors */
+.error{color:var(--danger);font-weight:700;margin-top:8px;display:none}
+
+/* Footer small */
+.footer{padding:12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);font-size:12px;color:var(--muted);text-align:center;border-top:1px solid rgba(255,255,255,0.02)}
+
+/* responsive */
+@media(max-width:420px){
+  .app{width:100vw;border-radius:0;height:100vh}
+  .viewport{height:calc(100% - 120px);padding:14px}
+  .badge{width:48px;height:48px}
+}
+</style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="app" role="application" aria-label="SmartGate App">
+      <!-- top -->
+      <div class="top">
+        <div class="badge">SG</div>
+        <div class="brand">
+          <div class="title">SmartGate App</div>
+          <div class="sub">AVANÇANDO JUNTOS</div>
+        </div>
+      </div>
+
+      <!-- progress -->
+      <div class="progress-wrap">
+        <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+      </div>
+
+      <!-- viewport -->
+      <div class="viewport">
+        <div class="screens">
+
+          <!-- SCREEN 1 -->
+          <section id="s1" class="screen active" aria-hidden="false">
+            <div class="card">
+              <div class="hero">
+                <div class="h1">Bem-vindo à SmartGate</div>
+                <div class="lead">Somos uma empresa especializada em facilitar capital de giro para empresas.</div>
+                <div class="small">Sem custos.</div>
+              </div>
+              <button id="btn-start" class="btn">Começar</button>
+            </div>
+          </section>
+
+          <!-- SCREEN 2: CHAVE -->
+          <section id="s2" class="screen" aria-hidden="true">
+            <div class="card">
+              <h3 style="font-weight:800">Acesso e Confiança</h3>
+              <p class="small">Insira a chave de acesso. Lembrando: você não pagará nada agora — nossa comissão só é combinada após conseguirmos o valor e você concordar.</p>
+
+              <label for="accessKey" class="small" style="margin-top:10px">Chave de acesso</label>
+              <input id="accessKey" class="input" type="text" inputmode="text" maxlength="8" placeholder="ex.: YHA288F4P" aria-label="Chave de acesso">
+
+              <div id="keyError" class="error">Chave inválida — tente novamente.</div>
+
+              <div style="display:flex;gap:10px;margin-top:18px">
+                <button id="btn-check" class="btn">Continuar</button>
+                <button id="btn-back-1" class="btn secondary">Voltar</button>
+              </div>
+
+              <div class="small" style="margin-top:12px">Chave de acesso <strong style="color:#dffeff">unica.</strong></div>
+            </div>
+          </section>
+
+          <!-- SCREEN 3: PIX SIMULADO (QR REMOVIDO, conteúdo centralizado) -->
+          <section id="s3" class="screen" aria-hidden="true">
+            <div class="card" style="display:flex;flex-direction:column;align-items:center">
+              <h3 style="font-weight:800;text-align:center">Verificação de Conta Real</h3>
+              <p class="small" style="text-align:center">Muito bem, você tem uma análise em andamento. O PIX deve ser feito por conta Bradesco ou Santander — nossos bancos parceiros. <strong>MAXIMO 39 CENTAVOS.</strong></p>
+
+              <div class="copyarea" style="margin-top:16px;max-width:320px">
+                <div style="font-weight:700">PAYPAG INTERMEDIAÇÃO DE PAGAMENTOS LTDA</div>
+                <div id="pixKey" style="margin-top:8px;font-family:monospace;color:#dffeff">[45.850.318/0001-08]</div>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                  <button id="btn-copy" class="btn" style="flex:1">Copiar chave (sim.)</button>
+                  <button id="btn-pix" class="btn secondary" style="flex:1;color:#dffeff">Enviei o PIX — ir para verificação</button>
+                </div>
+                <div class="small" style="margin-top:10px">MAXIMO 39 CENTAVOS!</div>
+              </div>
+
+              <div style="width:100%;margin-top:auto;display:flex;gap:10px">
+                <button id="btn-back-2" class="btn secondary" style="flex:1">Voltar</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- SCREEN 4: CONFIRMAÇÃO DE CONTA (novo) -->
+          <section id="s4" class="screen" aria-hidden="true">
+            <div class="card">
+              <h3 style="font-weight:800;text-align:center">Confirmação de conta</h3>
+              <p class="small" style="text-align:center">Anexe o comprovante do PIX e insira sua chave de acesso para verificação.</p>
+
+              <label for="comprovante" class="small" style="margin-top:12px">Anexar comprovante (imagem ou PDF)</label>
+              <input id="comprovante" type="file" accept="image/*,application/pdf" style="margin-top:8px" />
+
+              <div id="previewBox" class="preview" style="display:none;margin-top:10px"></div>
+
+              <label for="confirmKey" class="small" style="margin-top:12px">Chave de acesso (repita)</label>
+              <input id="confirmKey" class="input" type="text" maxlength="8" placeholder="Digite a chave de acesso novamente">
+
+              <div id="proofError" class="error">É necessário anexar o comprovante e informar a chave corretamente.</div>
+
+              <div style="display:flex;gap:10px;margin-top:14px">
+                <button id="btn-send-proof" class="btn">Enviar para verificação</button>
+                <button id="btn-back-3" class="btn secondary">Voltar</button>
+              </div>
+
+              <div class="small" style="margin-top:12px">Após confirmar, se houver possibilidade real de aprovação, seguiremos no aplicativo para agendar reunião com o gerente.</div>
+            </div>
+          </section>
+
+          <!-- SCREEN 5: CONFIRMAÇÃO FINAL -->
+          <section id="s5" class="screen" aria-hidden="true">
+            <div class="card">
+              <div style="text-align:center;margin-top:6px">
+                <div style="font-size:22px;font-weight:800;color:#a6f3c1">✅ Tudo certo!</div>
+                <p class="small" style="margin-top:12px">
+                  Seu comprovante foi (simulado) enviado com sucesso.<br>
+                  Aguarde até <strong>1 hora</strong> — o gerente entrará em contato com você.<br>
+                  Ative as notificações do aplicativo para receber a mensagem.
+                </p>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:auto">
+                <button id="btn-conclude" class="btn">Concluir</button>
+                <button id="btn-back-4" class="btn secondary">Voltar</button>
+              </div>
+
+              <div class="small" style="margin-top:12px">Support SmartGate — aguardando. Em caso de emergência, ligue para: <strong contenteditable>+55 (47) 99993-3150</strong></div>
+            </div>
+          </section>
+
+          <!-- SCREEN 6: CHAT SIMULADO -->
+          <section id="s6" class="screen" aria-hidden="true">
+            <div class="card">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div style="width:56px;height:56px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:#dffeff;font-weight:800">G</div>
+                <div>
+                  <div style="font-weight:800">Gerente SmartGate</div>
+                  <div class="small">Aguardando contato...</div>
+                </div>
+              </div>
+
+              <div style="margin-top:18px;flex:1;display:flex;align-items:center;justify-content:center">
+                <div style="text-align:center;color:var(--muted)">Aguardando o gerente iniciar o atendimento. Você será notificado dentro do aplicativo quando houver contato.</div>
+              </div>
+
+              <div style="margin-top:auto" class="small">Suporte SmartGate — aguardando. Caso queira, ligue: <strong contenteditable>+55 (47) 99993-3150</strong></div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <div class="footer">SmartGate Capital</div>
+    </div>
+  </div>
+
+<script>
+/* ----------------- FLOW + AUDIO + UX ----------------- */
+(function(){
+  const DEMO_KEY = 'G7A2K9P';
+  const screens = ['s1','s2','s3','s4','s5','s6'];
+  const $ = id => document.getElementById(id);
+  const progress = $('progressBar');
+
+  // micro audio: subtle click via WebAudio (no external files)
+  const audioCtx = (typeof AudioContext !== 'undefined') ? new AudioContext() : null;
+  function clickSound(){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 900;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.06, now + 0.005);
+    o.start(now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+    o.stop(now + 0.12);
+  }
+
+  // show screen with direction (right = forward, left = back)
+  function show(id, dir='right'){
+    const active = document.querySelector('.screen.active');
+    const next = $(id);
+    if(!next || next === active) return;
+    // outgoing
+    if(active){
+      active.classList.remove('active');
+      active.classList.add(dir === 'right' ? 'slide-left' : 'slide-right');
+      // cleanup class after animation
+      setTimeout(()=> active.classList.remove('slide-left','slide-right'), 420);
+      active.setAttribute('aria-hidden','true');
+    }
+    // incoming
+    next.classList.add('active', dir === 'right' ? 'from-right' : 'from-left');
+    next.setAttribute('aria-hidden','false');
+    setTimeout(()=> next.classList.remove('from-right','from-left'), 440);
+    updateProgress();
+  }
+
+  // progress update (simple: index)
+  function updateProgress(){
+    const idx = screens.findIndex(id => $(id).classList.contains('active'));
+    const pct = (idx / (screens.length - 1)) * 100;
+    progress.style.width = pct + '%';
+  }
+
+  // init
+  updateProgress();
+
+  // event bindings with audio and small haptics
+  function bind(id, fn){
+    const el = $(id);
+    if(!el) return;
+    el.addEventListener('click', (e)=>{
+      // try resume audio context on first interaction
+      if(audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume().catch(()=>{}); }
+      clickSound();
+      fn(e);
+    }, {passive:true});
+  }
+
+  // start
+  bind('btn-start', ()=> show('s2','right'));
+
+  // check key (initial)
+  bind('btn-check', ()=>{
+    $('keyError').style.display = 'none';
+    const v = ($('accessKey').value||'').trim().toUpperCase();
+    if(v === DEMO_KEY){
+      $('accessKey').value = '';
+      show('s3','right');
+    } else {
+      $('keyError').style.display = 'block';
+      // small shake animation
+      const el = $('accessKey');
+      try{ el.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:360}); }catch(e){}
+    }
+  });
+
+  // copy pix (sim)
+  bind('btn-copy', ()=>{
+    const text = $('pixKey').textContent;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(text).then(()=> {
+        // small success microfeedback
+        const t = document.createElement('div');
+        t.textContent = 'Chave copiada';
+        t.style.position='fixed';t.style.bottom='30px';t.style.left='50%';t.style.transform='translateX(-50%)';
+        t.style.background='rgba(0,0,0,0.6)';t.style.color='#fff';t.style.padding='8px 14px';t.style.borderRadius='10px';
+        t.style.zIndex=9999;document.body.appendChild(t);
+        setTimeout(()=> t.remove(),1200);
+      }).catch(()=> alert('Não foi possível copiar automaticamente.'));
+    } else alert('Copiar não suportado no navegador.');
+  });
+
+  // pix done -> go to comprovante screen
+  bind('btn-pix', ()=> show('s4','right'));
+
+  // handle file preview (client-side only)
+  const fileInput = $('comprovante');
+  const previewBox = $('previewBox');
+  if(fileInput){
+    fileInput.addEventListener('change', function(evt){
+      const f = this.files && this.files[0];
+      if(!f){ previewBox.style.display='none'; previewBox.innerHTML=''; return; }
+      // show name and small preview for images; for pdf show icon + name
+      const name = document.createElement('div');
+      name.style.padding='8px'; name.style.background='rgba(255,255,255,0.02)'; name.style.borderRadius='8px';
+      name.style.color='#dffeff'; name.style.fontFamily='monospace';
+      name.textContent = 'Arquivo: ' + f.name;
+      previewBox.innerHTML = '';
+      previewBox.appendChild(name);
+
+      if(f.type.startsWith('image/')){
+        const img = document.createElement('img');
+        img.style.display='block'; img.style.width='100%'; img.style.marginTop='8px';
+        const reader = new FileReader();
+        reader.onload = function(e){
+          img.src = e.target.result;
+          previewBox.appendChild(img);
+        };
+        reader.readAsDataURL(f);
+      } else {
+        // pdf or others: keep just the name
+      }
+      previewBox.style.display = 'block';
+    }, {passive:true});
+  }
+
+  // enviar comprovante (require both file + key)
+  bind('btn-send-proof', ()=>{
+    $('proofError').style.display = 'none';
+    const confirmKey = ($('confirmKey').value||'').trim().toUpperCase();
+    const f = fileInput && fileInput.files && fileInput.files[0];
+    if(confirmKey !== DEMO_KEY || !f){
+      $('proofError').style.display = 'block';
+      // animate fields to show issue
+      if(confirmKey !== DEMO_KEY){ try{ $('confirmKey').animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:360}); }catch(e){} }
+      if(!f){ try{ fileInput.animate([{transform:'translateY(-4px)'},{transform:'translateY(4px)'},{transform:'translateY(0)'}],{duration:360}); }catch(e){} }
+      return;
+    }
+    // simulate send: clear inputs and go to confirmation
+    $('confirmKey').value = '';
+    fileInput.value = '';
+    previewBox.style.display='none';
+    show('s5','right');
+  });
+
+  // conclude -> chat
+  bind('btn-conclude', ()=> show('s6','right'));
+
+  // back buttons
+  bind('btn-back-1', ()=> show('s1','left'));
+  bind('btn-back-2', ()=> show('s2','left'));
+  bind('btn-back-3', ()=> show('s3','left'));
+  bind('btn-back-4', ()=> show('s4','left'));
+
+  // small helpers: show/hide errors by element id names used above
+  window.addEventListener('load', ()=> {
+    if(!$('valError') && $('value-error')) { $('value-error').id='valError'; }
+    if(!$('keyError') && $('invalidKey')) { $('invalidKey').id='keyError'; }
+    updateProgress();
+  }, {once:true});
+
+  function updateProgress(){
+    const idx = screens.findIndex(id => $(id).classList.contains('active'));
+    const pct = (idx / (screens.length - 1)) * 100;
+    progress.style.width = pct + '%';
+  }
+
+})();
+</script>
+</body>
+</html>
